@@ -6,21 +6,42 @@
     var files = evt.target.files; // FileList object
 	var f = files[0];
     var reader = new FileReader();
+    var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
+	//判断浏览器是否支持reader.readAsBinaryString
+	
+	function fixdata(data) {
+	//无法读取二进制文件时的处理函数
+	var o = "", l = 0, w = 10240;
+	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+	o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+	return o;
+    }
+	
     reader.onload = function(e) {
-		if(typeof console !== 'undefined') console.log("onload", new Date());
+		// if(typeof console !== 'undefined') console.log("onload", new Date());
 		var data = e.target.result; //data为以二进制格式读取的文件
 		function doitnow() {
 			try {
-				var workbook = XLSX.read(data,{type: "binary"}); //将data解析为workbook
-			} catch(e) {
+				if(rABS) {
+			    	workbook = XLSX.read(data, {type: 'binary'}); //将data解析为workbook
+			    } else {
+			        var arr = fixdata(data); 
+			        workbook = XLSX.read(btoa(arr), {type: 'base64'});
+			    }
+			}
+			catch(e) {
 				console.log(e);
 				alert('We unfortunately dropped the ball here.  Please test the file using the <a href="/js-xlsx/">raw parser</a>.  If there are issues with the file processor, please send this file to <a href="mailto:dev@sheetjs.com?subject=I+broke+your+stuff">dev@sheetjs.com</a> so we can make things right.');
 			}
+			    //显示结果
+				result = XLSX.utils.sheet_to_formulae(workbook.Sheets[workbook.SheetNames[0]]);
+			    // console.log(result)
 		}
 		if(e.target.result.length > 1e6) alertify.confirm("This file is " + e.target.result.length + " bytes and may take a few moments.  Your browser may lock up during this process.  Shall we play?", function(k) { if(k) doitnow(); });
 		else doitnow();
 	};
-    reader.readAsBinaryString(f);
+	if(rABS) reader.readAsBinaryString(f);
+	else reader.readAsArrayBuffer(f);
     //for (var i = 0, f; f = files[i]; i++) {   }
     //需要读取多文件时使用此循环. files is a FileList of File objects. Use files[0] files[1]...
   }
