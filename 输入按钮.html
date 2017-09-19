@@ -12,6 +12,9 @@
   //判断浏览器是否支持reader.readAsBinaryString
   var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
   
+  //Jsons中存储所有表格文件转换得到的json
+  var jsons = [];
+  
   function handleFileDrag(evt) {
 	evt.stopPropagation();
     evt.preventDefault();
@@ -30,29 +33,24 @@
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
   }
   
+  function fixdata(data) {
+  //无法读取二进制文件时的处理函数
+  var o = "", l = 0, w = 10240;
+  for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+  o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+  return o;
+  }
+  
   function processFiles(files) {
-	var f = files[0];
-    var reader = new FileReader();
-
-	
-	function fixdata(data) {
-	//无法读取二进制文件时的处理函数
-	var o = "", l = 0, w = 10240;
-	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
-	o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
-	return o;
-    }
-	
-    reader.onload = function(e) {
-		// if(typeof console !== 'undefined') console.log("onload", new Date());
-		var data = e.target.result; //data为以二进制格式读取的文件
-		if(e.target.result.length > 1e6) alertify.confirm("This file is " + e.target.result.length + " bytes and may take a few moments.  Your browser may lock up during this process.  Shall we play?", function(k) { if(k) doitnow(); });
-		else dataToJson(data);
-	};
-	if(rABS) reader.readAsBinaryString(f);
-	else reader.readAsArrayBuffer(f);
-    //for (var i = 0, f; f = files[i]; i++) {   }
-    //需要读取多文件时使用此循环. files is a FileList of File objects. Use files[0] files[1]...
+	for (var i = 0, f; f = files[i]; i++) {  //依次读取选中的文件
+        var reader = new FileReader();
+        reader.onload = function(e) {
+		    var data = e.target.result; //data为以二进制格式读取的文件
+		    dataToJson(data);
+	    }
+	    if(rABS) reader.readAsBinaryString(f);
+	    else reader.readAsArrayBuffer(f);
+	}
   }
 
 
@@ -70,8 +68,9 @@
 			alert('We unfortunately dropped the ball here.  Please test the file using the <a href="/js-xlsx/">raw parser</a>.  If there are issues with the file processor, please send this file to <a href="mailto:dev@sheetjs.com?subject=I+broke+your+stuff">dev@sheetjs.com</a> so we can make things right.');
 		}
 		    //将workbook转json
-			result = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-		    console.log(result)
+			jsonOfWorkbook = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); //只处理sheet1中的数据
+		    //console.log(jsonOfWorkbook);
+			jsons.push(jsonOfWorkbook);
 	}
 </script>
 
