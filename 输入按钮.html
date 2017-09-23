@@ -13,7 +13,8 @@
   var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
   
   //csv中存储所有表格文件转换得到的csv(type:string)
-  var allCsv = [];
+  //var allCsv = [];
+  var allData = [];
   
   function handleFileDrag(evt) {
 	evt.stopPropagation();
@@ -33,11 +34,11 @@
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
   }
   
-  function fixdata(data) {
+  function fixdata(Bdata) {
   //浏览器无法直接读取二进制文件时的处理函数
   var o = "", l = 0, w = 10240;
-  for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
-  o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+  for(; l<Bdata.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(Bdata.slice(l*w,l*w+w)));
+  o+=String.fromCharCode.apply(null, new Uint8Array(Bdata.slice(l*w)));
   return o;
   }
   
@@ -45,8 +46,8 @@
 	for (var i = 0, f; f = files[i]; i++) {  //依次读取选中的文件
         var reader = new FileReader();
         reader.onload = function(e) {
-		    var data = e.target.result; //data为以二进制格式读取的文件
-		    parsing(data);
+		    var Bdata = e.target.result; //Bdata为以二进制格式读取的文件
+		    parsing(Bdata);
 	    }
 	    if(rABS) reader.readAsBinaryString(f);
 	    else reader.readAsArrayBuffer(f);
@@ -54,12 +55,12 @@
   }
 
 
-  	function parsing(data) {  //将data解析为可处理的string/json/HTML等
+  	function parsing(Bdata) {  //将Bdata解析为可处理的string/json/HTML等
 		try {
 			if(rABS) {
-		    	workbook = XLSX.read(data, {type: 'binary'}); //将data解析为workbook
+		    	workbook = XLSX.read(Bdata, {type: 'binary'}); //将Bdata解析为workbook
 		    } else {
-		        var arr = fixdata(data); 
+		        var arr = fixdata(Bdata); 
 		        workbook = XLSX.read(btoa(arr), {type: 'base64'});
 		    }
 		}
@@ -70,8 +71,27 @@
 			csv = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]); //只处理sheet1中的数据
 			//其他可选：sheet_to_json, sheet_to_html, sheet_to_formulae
 		    //console.log(csv);
-			allCsv.push(csv);
-			//Todo: 每获得一个csv，就进行处理，算出后续画出图形所需要的所有必须数据
+			//allCsv.push(csv);
+			csvToAry(csv);
+			//每获得一个csv，就进行处理，算出后续画出图形所需要的所有必须数据
+	}
+	
+	
+	
+	
+	function csvToAry(c) {
+		tempAry = c.split("\n");  //look like [["2","3","4","5"],[...],...]
+		for (var i = 0; i < tempAry.length; i++) {
+		    tempAry[i] = tempAry[i].split(",").map(s => +s);  //look like [[2,3,4,5],[...]]
+		}
+		var amount = tempAry[0].length - 1; //一个csv中所包含的信号数量
+		for (var i = 0; i < amount; i++) {
+		    var data = [];
+		    for (var j = 0; j < tempAry.length; j++) {
+			    data.push([tempAry[j][0],tempAry[j][i + 1]]);  //get data like [[2,3],[...],...]
+				}
+			allData.push(data);
+		}
 	}
 </script>
 
