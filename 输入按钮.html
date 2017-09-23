@@ -9,11 +9,11 @@
   dropZone.addEventListener('dragover', handleDragOver, false);
   dropZone.addEventListener('drop', handleFileDrag, false);
 
-  //判断浏览器是否支持reader.readAsBinaryString
+  //判断浏览器是否支持FileReader.readAsBinaryString
   var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
   
-  //Jsons中存储所有表格文件转换得到的json
-  var jsons = [];
+  //csv中存储所有表格文件转换得到的csv(type:string)
+  var allCsv = [];
   
   function handleFileDrag(evt) {
 	evt.stopPropagation();
@@ -34,7 +34,7 @@
   }
   
   function fixdata(data) {
-  //无法读取二进制文件时的处理函数
+  //浏览器无法直接读取二进制文件时的处理函数
   var o = "", l = 0, w = 10240;
   for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
   o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
@@ -46,7 +46,7 @@
         var reader = new FileReader();
         reader.onload = function(e) {
 		    var data = e.target.result; //data为以二进制格式读取的文件
-		    dataToJson(data);
+		    parsing(data);
 	    }
 	    if(rABS) reader.readAsBinaryString(f);
 	    else reader.readAsArrayBuffer(f);
@@ -54,7 +54,7 @@
   }
 
 
-  	function dataToJson(data) {
+  	function parsing(data) {  //将data解析为可处理的string/json/HTML等
 		try {
 			if(rABS) {
 		    	workbook = XLSX.read(data, {type: 'binary'}); //将data解析为workbook
@@ -65,12 +65,13 @@
 		}
 		catch(e) {
 			console.log(e);
-			alert('We unfortunately dropped the ball here.  Please test the file using the <a href="/js-xlsx/">raw parser</a>.  If there are issues with the file processor, please send this file to <a href="mailto:dev@sheetjs.com?subject=I+broke+your+stuff">dev@sheetjs.com</a> so we can make things right.');
+			alert("Error parsing the workbooks.");
 		}
-		    //将workbook转json
-			jsonOfWorkbook = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); //只处理sheet1中的数据
-		    //console.log(jsonOfWorkbook);
-			jsons.push(jsonOfWorkbook);
+			csv = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]); //只处理sheet1中的数据
+			//其他可选：sheet_to_json, sheet_to_html, sheet_to_formulae
+		    //console.log(csv);
+			allCsv.push(csv);
+			//Todo: 每获得一个csv，就进行处理，算出后续画出图形所需要的所有必须数据
 	}
 </script>
 
