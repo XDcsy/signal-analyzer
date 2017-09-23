@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <!-- 引入 ECharts 文件 -->
+    <script src="xlsx.full.min.js"></script>
+	<script src="echarts.js"></script>
+	<script src="ecStat.js"></script>
+</head>
+<body>
+    <input type="file" id="files" name="files[]" multiple />
+    <div id="drop_zone">Drop files here</div>
+	<select id="IDselecter"></select>
+	<br>
+	
+	<label for="notlog">
+	<input type="radio" id="notlog" name="time"/>time
+	</label>
+	
+	<label for="log">
+    <input type="radio" id="log" checked=true name="time"/>log(time)
+	</label> 
+	
+    <div id="main" style="width: 600px;height:400px;"></div>
+	<script src="input_and_parse.js"></script>
+</body>
+</html>
