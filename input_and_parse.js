@@ -19,9 +19,32 @@
   
   
   function signal(data) {  //构造函数
+	  function split(data) {
+		  var T = [], logT = [], Y = [];
+		  for (var i = 0; i < data.length; i++) {
+			  T.push(data[i][0]);
+			  logT.push(Math.log(data[i][0]));
+			  Y.push(data[i][1]);
+		  }
+		  return [T, logT, Y];
+	  }
+	  function combine(X, Y) {
+		  var newData = [];
+		  console.assert(X.length == Y.length);
+		  for (var i = 0; i < X.length; i++) {
+			  newData.push([X[i],Y[i]]);
+		  }
+		  return newData;
+	  }
 	  this.data = data;
-	  this.regression = ecStat.regression('polynomial', data, 16);
 	  this.num = num;
+	  var splitedData = split(data);
+	  var T = splitedData[0];
+	  var logT = splitedData[1];
+	  var Y = splitedData[2];
+	  
+	  this.logData = combine(logT, Y);
+	  this.regression = ecStat.regression('polynomial', this.logData, 16);
 	  //this.d1 = d1();
 	  //this.d2 = d2();
   }
@@ -104,7 +127,7 @@
 			    data.push([tempAry[j][0],tempAry[j][i + 1]]);  //get data like [[2,3],[...],...]
 				}
 			signals.push(new signal(data));
-			var option = new Option(num.toString(), num); IDselecter.options.add(option); num++; //将每一个新信号，添加进选择框
+			var signalOption = new Option(num.toString(), num); IDselecter.options.add(signalOption); num++; //将每一个新信号，添加进选择框
 		}
 		if (signals.length != 0) {draw();} //!!!全部数据生成完毕后，初始化第一副图
 	}
@@ -118,14 +141,11 @@
 	 function draw(){
 		
 		var signalID = IDselecter.value;
-		if (log.checked){
-			xType = "log";
-		}
-		else{
-			xType = "value";
-		}
 		
-		var myChart = echarts.init(document.getElementById('main'));
+		var chart1 = echarts.init(document.getElementById('chart1'));
+		var chart2 = echarts.init(document.getElementById('chart2'));
+        var chart3 = echarts.init(document.getElementById('chart3'));
+		var chart4 = echarts.init(document.getElementById('chart4'));
 		var option = {
                 title: {// 图表标题，可以通过show:true/false控制显示与否，还有subtext:'二级标题',link:'http://www.baidu.com'等  
                     text: 'Signal'  
@@ -148,8 +168,8 @@
                     containLabel: true  
                  },  
                 xAxis : {  
-					type : xType,  //对数轴
-                    name:'log(time)',
+					type : 'value',  //对数轴
+                    name:'time',
 					splitLine: {  //分隔线
                         lineStyle: {
                             type: 'dashed'
@@ -182,7 +202,11 @@
                     data: signals[signalID].data
                 },// 这里就是数据了  
             };
-		//myChart.clear();
-		myChart.setOption(option, true);	
+			
+		if (log.checked){
+			option.series.data = signals[signalID].regression.points;
+		}
+		//chart1.clear();
+		chart1.setOption(option, true);	
 		}
 		
