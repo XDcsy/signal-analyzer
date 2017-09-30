@@ -23,7 +23,7 @@
 		  var T = [], logT = [], Y = [];
 		  for (var i = 0; i < data.length; i++) {
 			  T.push(data[i][0]);
-			  logT.push(Math.log(data[i][0]));
+			  logT.push(Math.log(data[i][0])/Math.LN10);  //对横坐标取10为底的对数
 			  Y.push(data[i][1]);
 		  }
 		  return [T, logT, Y];
@@ -44,7 +44,22 @@
 	  var Y = splitedData[2];
 	  
 	  this.logData = combine(logT, Y);
-	  this.regression = ecStat.regression('polynomial', this.logData, 16);
+	  reg = ecStat.regression('polynomial', this.logData, 16);
+	  this.regression = reg;
+	  
+	  function getDerivative(d, x) {  //d为导数的阶数，x为横坐标的数据
+	      var exp = "";
+		  var dy = [];
+	      for (var i = d; i <= reg.parameter.length - d; i++) {
+		      exp = exp + "+" + reg.parameter[i].toString() + "*" + i.toString() + "* Math.pow(x[j]," + (i-d).toString() + ")";  //exp look like: "+p[1]*1*Math.pow(x, 0) + +p[2]*2*Math.pow(x, 1) ..."
+		  }
+		  for (var j = 0; j < x.length; j++) {
+			  dy.push(eval(exp));
+		  }
+		  return dy;  //dy为导数的值（数组形式）
+	  }
+	  var d1Y = getDerivative(1, logT);
+	  this.d1LogData = combine(logT, d1Y);
 	  //this.d1 = d1();
 	  //this.d2 = d2();
   }
@@ -153,8 +168,8 @@
                 tooltip : {// 这个是鼠标浮动时的工具条，显示鼠标所在区域的数据，trigger这个地方每种图有不同的设置，见官网吧，一两句说不清楚  
                     trigger: 'axis'  
                 },  
-                legend: {// 这个就是图例，也就是每条折线或者项对应的示例，就是这个<a target=_blank href="http://img.blog.csdn.net/20160622094820180?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center">图例</a>  
-                    data:["data"]  //需要与series或data的名字一致
+                legend: {// 这个就是图例，也就是每条折线或者项对应的示例
+                    data:["data", "d1"]  //需要与series或data的名字一致
                 },  
                 toolbox: {  
                     feature: {  
@@ -186,7 +201,7 @@
                     },
                 },
 
-                series: {
+                series: [{
                     name: 'data',
                     type: 'line',
                     label: {
@@ -199,12 +214,27 @@
                             }
                         }
                     },
-                    data: signals[signalID].data
-                },// 这里就是数据了  
+                    data: signals[signalID].data  // 这里就是数据了
+                }, {
+					name : 'd1',
+					type : 'line',
+                    label: {
+                        emphasis: {
+                            show: true,
+                            position: 'left',
+                            textStyle: {
+                                color: 'blue',
+                                fontSize: 16
+                            }
+						}
+					},
+					data: signals[signalID].d1LogData
+				}]
             };
 			
 		if (log.checked){
-			option.series.data = signals[signalID].regression.points;
+			option.series[0].data = signals[signalID].regression.points;  //以log为横坐标拟合的数据
+			//此处可优化
 		}
 		//chart1.clear();
 		chart1.setOption(option, true);	
