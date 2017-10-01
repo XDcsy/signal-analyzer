@@ -2,14 +2,14 @@
   document.getElementById('files').addEventListener('change', handleFileSelect, false);
   var dropZone = document.getElementById('drop_zone');
   var IDselecter = document.getElementById('IDselecter');
-  var notlog = document.getElementById('notlog');
-  var log = document.getElementById('log');
+//  var notlog = document.getElementById('notlog');
+//  var log = document.getElementById('log');
   
   dropZone.addEventListener('dragover', handleDragOver, false);
   dropZone.addEventListener('drop', handleFileDrag, false);
-  IDselecter.addEventListener('change', draw, false);
-  notlog.addEventListener('click',draw, false);
-  log.addEventListener('click', draw, false);
+  IDselecter.addEventListener('change', changeID, false);
+//  notlog.addEventListener('click',draw, false);
+//  log.addEventListener('click', draw, false);
 
   //判断浏览器是否支持FileReader.readAsBinaryString
   var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
@@ -36,30 +36,52 @@
 		  }
 		  return newData;
 	  }
-	  this.data = data;
+	  this.data = data;  //t,y
 	  this.num = num;
 	  var splitedData = split(data);
 	  var T = splitedData[0];
 	  var logT = splitedData[1];
 	  var Y = splitedData[2];
 	  
-	  this.logData = combine(logT, Y);
+	  this.logData = combine(logT, Y); //log(t),y
 	  reg = ecStat.regression('polynomial', this.logData, 16);
 	  this.regression = reg;
 	  
 	  function getDerivative(d, x) {  //d为导数的阶数，x为横坐标的数据
 	      var exp = "";
 		  var dy = [];
-	      for (var i = d; i <= reg.parameter.length - d; i++) {
-		      exp = exp + "+" + reg.parameter[i].toString() + "*" + i.toString() + "* Math.pow(x[j]," + (i-d).toString() + ")";  //exp look like: "+p[1]*1*Math.pow(x, 0) + +p[2]*2*Math.pow(x, 1) ..."
+	      if (d==1) {
+		      for (var i = d; i < reg.parameter.length; i++) {
+		          exp = exp + "+" + reg.parameter[i].toString() + "*" + i.toString() + "* Math.pow(x[j]," + (i-d).toString() + ")";  //exp look like: "+p[1]*1*Math.pow(x, 0) + +p[2]*2*Math.pow(x, 1) ..."
+		      }
+		  }
+		  if (d==2) {
+		      for (var i = d; i < reg.parameter.length; i++) {
+		          exp = exp + "+" + reg.parameter[i].toString() + "*" + i.toString() + "*" + (i-1).toString() + "* Math.pow(x[j]," + (i-d).toString() + ")";  //exp look like: "+p[1]*1*Math.pow(x, 0) + +p[2]*2*Math.pow(x, 1) ..."
+		      }
 		  }
 		  for (var j = 0; j < x.length; j++) {
 			  dy.push(eval(exp));
 		  }
 		  return dy;  //dy为导数的值（数组形式）
 	  }
+	  function getCurvature(d1, d2) {
+		  console.assert(d1.length == d2.length);
+		  var c = [];
+		  for (var i = 0; i < d1.length; i++) {
+			  c.push(   Math.log(Math.abs(d2[i])/Math.pow(1+Math.pow(d1[i],2),1.5))/Math.LN10   );  //对曲率取了对数
+		  }
+		  return c;
+	  }
 	  var d1Y = getDerivative(1, logT);
-	  this.d1LogData = combine(logT, d1Y);
+	  var d2Y = getDerivative(2, logT);
+	  var cY = getCurvature(d1Y, d2Y);
+	  this.d1LogData = combine(logT, d1Y);  //log(t),dy
+	  this.d2LogData = combine(logT, d2Y);  //log(t),ddy
+	  this.d1Data = combine(T, d1Y);  //t, dy
+	  this.d2Data = combine(T, d2Y);  //t, ddy
+	  this.cData = combine(T, cY);  //t, log(c)
+	  this.cLogData = combine(logT, cY)  //log(t), log(c)
 	  //this.d1 = d1();
 	  //this.d2 = d2();
   }
@@ -144,7 +166,7 @@
 			signals.push(new signal(data));
 			var signalOption = new Option(num.toString(), num); IDselecter.options.add(signalOption); num++; //将每一个新信号，添加进选择框
 		}
-		if (signals.length != 0) {draw();} //!!!全部数据生成完毕后，初始化第一副图
+		if (signals.length != 0) {initialDraw();} //!!!全部数据生成完毕后，初始化第一副图
 	}
 
 
@@ -152,91 +174,27 @@
 	
 
 
-//****************
-	 function draw(){
-		
-		var signalID = IDselecter.value;
-		
-		var chart1 = echarts.init(document.getElementById('chart1'));
-		var chart2 = echarts.init(document.getElementById('chart2'));
-        var chart3 = echarts.init(document.getElementById('chart3'));
-		var chart4 = echarts.init(document.getElementById('chart4'));
-		var option = {
-                title: {// 图表标题，可以通过show:true/false控制显示与否，还有subtext:'二级标题',link:'http://www.baidu.com'等  
-                    text: 'Signal'  
-                },  
-                tooltip : {// 这个是鼠标浮动时的工具条，显示鼠标所在区域的数据，trigger这个地方每种图有不同的设置，见官网吧，一两句说不清楚  
-                    trigger: 'axis'  
-                },  
-                legend: {// 这个就是图例，也就是每条折线或者项对应的示例
-                    data:["data", "d1"]  //需要与series或data的名字一致
-                },  
-                toolbox: {  
-                    feature: {  
-                        saveAsImage: {}// 工具，提供几个按钮，例如动态图表转换，数据视图，保存为图片等  
-                    }  
-                 },  
-                grid: {  
-                    left: '3%',  
-                    right: '4%',  
-                    bottom: '3%',// 这几个属性可以控制图表上下左右的空白尺寸，可以自己试试。  
-                    containLabel: true  
-                 },  
-                xAxis : {  
-					type : 'value',  //对数轴
-                    name:'time',
-					splitLine: {  //分隔线
-                        lineStyle: {
-                            type: 'dashed'
-                        }
-                    },
-                },
- 
-                yAxis: {
-                    type: 'value',
-                    splitLine: {
-                        lineStyle: {
-                            type: 'dashed'
-                        }
-                    },
-                },
+//****************从此处开始所有数据均由signals[x]. 获得 
+//初始化
+var chart1 = echarts.init(document.getElementById('chart1'));
+var chart2 = echarts.init(document.getElementById('chart2'));
+var chart3 = echarts.init(document.getElementById('chart3'));
+var chart4 = echarts.init(document.getElementById('chart4'));
+//初始option
 
-                series: [{
-                    name: 'data',
-                    type: 'line',
-                    label: {
-                        emphasis: {
-                            show: true,
-                            position: 'left',
-                            textStyle: {
-                                color: 'blue',
-                                fontSize: 16
-                            }
-                        }
-                    },
-                    data: signals[signalID].data  // 这里就是数据了
-                }, {
-					name : 'd1',
-					type : 'line',
-                    label: {
-                        emphasis: {
-                            show: true,
-                            position: 'left',
-                            textStyle: {
-                                color: 'blue',
-                                fontSize: 16
-                            }
-						}
-					},
-					data: signals[signalID].d1LogData
-				}]
-            };
 			
-		if (log.checked){
-			option.series[0].data = signals[signalID].regression.points;  //以log为横坐标拟合的数据
-			//此处可优化
-		}
-		//chart1.clear();
-		chart1.setOption(option, true);	
+function changeData(option, dataAry) {  //注意这里是引用而非赋值（克隆）
+	for (var i = 0; i < option.series.length; i++) {
+		option.series[i].data = dataAry[i]
+	}
+}
+
+function initialDraw(){
+	changeData(option1, [signals[0].logData, signals[0].cLogData]);
+	chart1.setOption(option1, true);	
+	chart2.setOption(option1, true);	
+	chart3.setOption(option1, true);	
+	chart4.setOption(option1, true);	
 		}
 		
+function changeID(){}
