@@ -8,10 +8,20 @@
 	<script src="ecStat.js"></script>
 </head>
 <body>
-    <input type="file" id="files" name="files[]" multiple />
-    <div id="drop_zone">Drop files here</div>
+    <script src="chart0.js"></script>
 	
-	<div id="resultArea">
+	<div id="selectArea">
+	<input type="file" id="files" name="files[]" multiple />
+    <div id="drop_zone">Drop files here</div>
+	</div>
+	
+	<div id="preArea">
+	<div id="notice">To begin, please select files.</div>
+    <div id="chart0" style="width: 600px;height:400px;"></div>
+	<button id="rangeSet" hidden=true>Next</button>
+	</div>
+	
+	<div id="resultArea" hidden=true>
 	<select id="IDselecter"></select>
 	<button id="pre">Previous chart</button>
 	<button id="next">Next chart</button>

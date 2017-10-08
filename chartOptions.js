@@ -57,18 +57,22 @@ var initOption = {
 
     series : [{
             name : 'data',
+			symbol: 'none',
             type : 'line',
             yAxisIndex : 0,
         }, {
             name : 'curvature',
+			symbol: 'none',
             type : 'line',
             yAxisIndex : 1,
         }, {
             name : '2ndDerivative',
+			symbol: 'none',
             type : 'line',
             yAxisIndex : 0,
         }, {
             name : '1stDerivative',
+			symbol: 'none',
             type : 'line',
             yAxisIndex : 0,
         },

@@ -1,8 +1,5 @@
-var chart1 = echarts.init(document.getElementById('chart1'));
-var chart2 = echarts.init(document.getElementById('chart2'));
-var chart3 = echarts.init(document.getElementById('chart3'));
-var chart4 = echarts.init(document.getElementById('chart4'));
-var chartAry = [chart1, chart2, chart3, chart4];
+var chart1, chart2, chart3, chart4;
+var chartAry = [];
 // Setup the listeners.
 document.getElementById('files').addEventListener('change', handleFileSelect, false);
 var dropZone = document.getElementById('drop_zone');
@@ -18,6 +15,8 @@ var log4 = document.getElementById('log4');
 var resultArea = document.getElementById('resultArea');
 var pre = document.getElementById('pre');
 var next = document.getElementById('next');
+var notice = document.getElementById("notice");
+
 
 var notlogAry = [notlog1,notlog2,notlog3,notlog4];
 var logAry = [log1,log2,log3,log4];
@@ -70,6 +69,7 @@ var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== 
 
 var signals = [];
 var num = 0; //记录signal的序号
+var index;  //记录特征点的范围
 
 
 function signal(data) { //构造函数
@@ -135,14 +135,16 @@ function signal(data) { //构造函数
     var d1Y = getDerivative(1, logT, reg.parameter);
     var d2Y = getDerivative(2, logT, reg.parameter);
     var cY = getCurvature(d1Y, d2Y);
+	this.logC = cY;
     //this.d1LogData = combine(logT, d1Y); //log(t),dy
     //this.d2LogData = combine(logT, d2Y); //log(t),ddy
     this.d1Data = combine(T, d1Y); //t, dy
     this.d2Data = combine(T, d2Y); //t, ddy
     this.cData = combine(T, cY); //t, log(c)
-    //this.cLogData = combine(logT, cY) //log(t), log(c)
+    this.cLogData = combine(logT, cY); //log(t), log(c)
         //this.d1 = d1();
         //this.d2 = d2();
+	this.featurePoints = [];
 }
 
 function handleFileDrag(evt) {
@@ -175,7 +177,8 @@ function fixdata(Bdata) {
 }
 
 function processFiles(files) {
-    for (var i = 0, f; f = files[i]; i++) { //依次读取选中的文件
+    notice.innerHTML = "Reading files, please wait...";  //开始处理前进行提示
+	for (var i = 0, f; f = files[i]; i++) { //依次读取选中的文件
         var reader = new FileReader();
         reader.onload = function (e) {
             var Bdata = e.target.result; //Bdata为以二进制格式读取的文件
@@ -231,10 +234,74 @@ function csvToAry(c) {
         num++; //将每一个新信号，添加进选择框
     }
     if (signals.length != 0) {
-        initialDraw();
-    } //!!!全部数据生成完毕后，初始化第一副图
+        preProcess();
+    } //!!!全部数据生成完毕后，通过交互读取数据范围等
 }
 
+
+function preProcess() {
+    document.getElementById('selectArea').hidden = true; //隐藏文件选择的按钮
+	var chart0 = echarts.init(document.getElementById('chart0'));
+	var rangeSet = document.getElementById('rangeSet');
+	
+	for (var i = 0; i < signals.length; i++){
+		chart0Options.series.push({name:"signal"+i.toString(), type:"line", symbol:"none", itemStyle:{normal:{color:"#A9A9A9"}},data:signals[i].cLogData});
+		chart0Options.series.push({name:"ssignal"+i.toString(), type:"scatter", symbolSize:3, z:100, data:signals[i].cLogData});
+	}
+	chart0.setOption(chart0Options, true);
+	chart0.on('brushselected', brushed);
+	rangeSet.hidden = false;
+	rangeSet.addEventListener('click', getFeaturePoints);
+	notice.innerHTML="请点击图表右上角的“横向选择”工具，选择出特征点可能出现的大致范围。可以使用“保持选择”功能选择多个区域。"
+	//initialDraw();
+}
+
+function getFeaturePoints() {
+	var range = splitIndex();
+	findMaxPoint(range); //寻找极大值点
+}
+
+function splitIndex() {
+	var range = [];
+	var tmp = [];
+	for (var i = 0; i < index.length-1; i++) {
+		if (index[i]+1 == index[i+1]) {
+			tmp.push(index[i]);
+		}
+		else {
+			tmp.push(index[i]);
+			range.push(tmp);
+			tmp = [];
+		}
+	}
+	range.push(tmp);
+	return range;
+}
+
+function findMaxPoint(range) {
+	for (var k = 0; k < signals.length; k++) { //对每一个信号
+		for (var i = 0; i < range.length; i++)  //对每一个范围寻找极大值点
+		{
+			var find = false;
+			for (var j = 0; j < range[i].length; j++) { //index遍历range每个点
+			    p = range[i][j];  //p为真实的下标
+				if ( (signals[k].cData[p][1] > signals[k].cData[p-1][1]) && (signals[k].cData[p][1] > signals[k].cData[p+1][1]) ) {
+					signals[k].featurePoints.push(signals[k].cData[p]);
+					find = true;
+					break;
+				}
+				
+			}
+			if (!(find)) {
+				signals[k].featurePoints.push(signals[k].cData[p]);  //若未找到极大值点，以范围中最后一个点作为极大值点
+			}
+		}
+	}
+}
+
+function brushed(params) {
+	index = params.batch[0].selected[0].dataIndex;  //!!!特征点的范围目前仅由第一条曲线的index决定
+}
 //****************从此处开始所有数据均由signals[x]. 获得
 //初始化
 
@@ -269,7 +336,13 @@ function changeData(chart, chartNum) {
 }
 
 function initialDraw() {
-    chart1.setOption(initOption, true);
+    resultArea.hidden = false;
+	chart1 = echarts.init(document.getElementById('chart1'));
+    chart2 = echarts.init(document.getElementById('chart2'));
+    chart3 = echarts.init(document.getElementById('chart3'));
+    chart4 = echarts.init(document.getElementById('chart4'));
+    chartAry = [chart1, chart2, chart3, chart4];
+	chart1.setOption(initOption, true);
 	chart1.setOption(
 	{
 		legend:{
@@ -315,7 +388,6 @@ function initialDraw() {
     //chart2.setOption(initOption, true);
     //chart3.setOption(initOption, true);
     //chart4.setOption(initOption, true);
-	resultArea.hidden = false;
 }
 
 function changeID() {
