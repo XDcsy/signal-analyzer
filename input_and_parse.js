@@ -253,12 +253,12 @@ function preProcess() {
 	rangeSet.hidden = false;
 	rangeSet.addEventListener('click', getFeaturePoints);
 	notice.innerHTML="请点击图表右上角的“横向选择”工具，选择出特征点可能出现的大致范围。可以使用“保持选择”功能选择多个区域。"
-	//initialDraw();
 }
 
 function getFeaturePoints() {
 	var range = splitIndex();
 	findMaxPoint(range); //寻找极大值点
+	initialDraw(); //画第一副图
 }
 
 function splitIndex() {
@@ -286,14 +286,14 @@ function findMaxPoint(range) {
 			for (var j = 0; j < range[i].length; j++) { //index遍历range每个点
 			    p = range[i][j];  //p为真实的下标
 				if ( (signals[k].cData[p][1] > signals[k].cData[p-1][1]) && (signals[k].cData[p][1] > signals[k].cData[p+1][1]) ) {
-					signals[k].featurePoints.push(signals[k].cData[p]);
+					signals[k].featurePoints.push(p);  //signals[k].featurePoints存储的是特征点的index
 					find = true;
 					break;
 				}
 				
 			}
 			if (!(find)) {
-				signals[k].featurePoints.push(signals[k].cData[p]);  //若未找到极大值点，以范围中最后一个点作为极大值点
+				signals[k].featurePoints.push(p);  //若未找到极大值点，以范围中最后一个点的后一个点作为极大值点
 			}
 		}
 	}
@@ -314,6 +314,34 @@ function brushed(params) {
 //    }
 //}
 
+function initMarkPoints(chart, chartNum) {
+	var pointsData = [], pointsC = [], pointsD1 = [], pointsD2 = [];
+	for (i = 0; i < signals[chartNum].featurePoints.length; i++){
+		pointsData.push({coord:signals[chartNum].data[signals[chartNum].featurePoints[i]]});  //[{coord:[x, y]}, {coord:[x, y]}] 的对象数组
+		pointsC.push({coord:signals[chartNum].cData[signals[chartNum].featurePoints[i]]});
+		pointsD1.push({coord:signals[chartNum].d1Data[signals[chartNum].featurePoints[i]]});
+		pointsD2.push({coord:signals[chartNum].d2Data[signals[chartNum].featurePoints[i]]});
+	}
+	chart.setOption ({
+		series:[{
+            name: 'data',
+            markPoint: {data: pointsData},
+        },
+		{
+            name: 'curvature',
+            markPoint: {data: pointsC},
+		},
+		{
+            name: '2ndDerivative',
+            markPoint: {data: pointsD2},
+		},
+		{
+            name: '1stDerivative',
+            markPoint: {data: pointsD1},
+		}]
+	});
+}
+
 function changeData(chart, chartNum) {
 	chart.setOption ({
 		series:[{
@@ -333,6 +361,7 @@ function changeData(chart, chartNum) {
             data: signals[chartNum].d1Data
 		}]
 	});
+	initMarkPoints(chart, chartNum);  //在更新过图上数据之后还需要重绘特征点
 }
 
 function initialDraw() {

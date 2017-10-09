@@ -60,21 +60,105 @@ var initOption = {
 			symbol: 'none',
             type : 'line',
             yAxisIndex : 0,
+            markPoint: {
+				symbolSize: 20,
+				itemStyle: {
+					normal: {
+						color: 'red'
+					}
+				},
+				label: {
+					normal: {
+						show: true,
+						position: 'left',
+						textStyle: {
+							color: '#333',
+							fontSize:17
+						},
+						formatter:function(params){  //将特征点标签显示的坐标取5位有效数字
+							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
+						}
+					}
+				},
+            },
         }, {
             name : 'curvature',
 			symbol: 'none',
             type : 'line',
             yAxisIndex : 1,
+            markPoint: {
+				symbolSize: 20,
+				itemStyle: {
+					normal: {
+						color: 'red'
+					}
+				},
+				label: {
+					normal: {
+						show: true,
+						position: 'left',
+						textStyle: {
+							color: '#333',
+							fontSize:14
+						},
+						formatter:function(params){  //将特征点标签显示的坐标取5位有效数字
+							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
+						}
+					}
+				},
+            },
         }, {
             name : '2ndDerivative',
 			symbol: 'none',
             type : 'line',
             yAxisIndex : 0,
+            markPoint: {
+				symbolSize: 20,
+				itemStyle: {
+					normal: {
+						color: 'red'
+					}
+				},
+				label: {
+					normal: {
+						show: true,
+						position: 'left',
+						textStyle: {
+							color: '#333',
+							fontSize:14
+						},
+						formatter:function(params){  //将特征点标签显示的坐标取5位有效数字
+							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
+						}
+					}
+				},
+            },
         }, {
             name : '1stDerivative',
 			symbol: 'none',
             type : 'line',
             yAxisIndex : 0,
+            markPoint: {
+				symbolSize: 20,
+				itemStyle: {
+					normal: {
+						color: 'red'
+					}
+				},
+				label: {
+					normal: {
+						show: true,
+						position: 'left',
+						textStyle: {
+							color: '#333',
+							fontSize:14
+						},
+						formatter:function(params){  //将特征点标签显示的坐标取5位有效数字
+							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
+						}
+					}
+				},
+            },
         },
     ]
 };
