@@ -16,6 +16,9 @@ var resultArea = document.getElementById('resultArea');
 var pre = document.getElementById('pre');
 var next = document.getElementById('next');
 var notice = document.getElementById("notice");
+var pointNotice = document.getElementById("pointNum");
+var left = document.getElementById("left");
+var right = document.getElementById("right");
 
 
 var notlogAry = [notlog1,notlog2,notlog3,notlog4];
@@ -414,9 +417,28 @@ function initialDraw() {
 		},
 	});
 	changeData(chart4, 0);
-    //chart2.setOption(initOption, true);
-    //chart3.setOption(initOption, true);
-    //chart4.setOption(initOption, true);
+    
+	chart1.on('click', dealChartOnClick);
+	chart2.on('click', dealChartOnClick);
+	chart3.on('click', dealChartOnClick);
+	chart4.on('click', dealChartOnClick);
+}
+
+function dealChartOnClick(params) { 
+		var pointIndex = params.dataIndex;
+		var chartNum = IDselecter.value;
+		pointNotice.innerHTML = "Now is edting feature point " + pointIndex.toString();
+		setMoveFunction(left, -1);
+		setMoveFunction(right, 1);
+		function setMoveFunction(buttonObj, step) {
+			buttonObj.onclick = function() {
+				signals[chartNum].featurePoints[pointIndex] += step;
+				initMarkPoints(chart1, chartNum);
+				initMarkPoints(chart2, chartNum);
+				initMarkPoints(chart3, chartNum);
+				initMarkPoints(chart4, chartNum);
+			};
+		}
 }
 
 function changeID() {

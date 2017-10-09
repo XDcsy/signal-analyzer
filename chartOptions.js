@@ -101,7 +101,7 @@ var initOption = {
 							color: '#333',
 							fontSize:14
 						},
-						formatter:function(params){  //将特征点标签显示的坐标取5位有效数字
+						formatter:function(params){
 							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
 						}
 					}
@@ -127,7 +127,7 @@ var initOption = {
 							color: '#333',
 							fontSize:14
 						},
-						formatter:function(params){  //将特征点标签显示的坐标取5位有效数字
+						formatter:function(params){
 							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
 						}
 					}
@@ -153,7 +153,7 @@ var initOption = {
 							color: '#333',
 							fontSize:14
 						},
-						formatter:function(params){  //将特征点标签显示的坐标取5位有效数字
+						formatter:function(params){
 							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
 						}
 					}
