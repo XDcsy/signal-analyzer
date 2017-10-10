@@ -244,11 +244,11 @@ function csvToAry(c) {
 
 function preProcess() {
     document.getElementById('selectArea').hidden = true; //隐藏文件选择的按钮
-	var chart0 = echarts.init(document.getElementById('chart0'));
+	var chart0 = echarts.init(document.getElementById('chart0'), "dark");
 	var rangeSet = document.getElementById('rangeSet');
 	
 	for (var i = 0; i < signals.length; i++){
-		chart0Options.series.push({name:"signal"+i.toString(), type:"line", symbol:"none", itemStyle:{normal:{color:"#A9A9A9"}},data:signals[i].cLogData});
+		chart0Options.series.push({name:"signal"+i.toString(), type:"line", sampling:"average",symbol:"none", itemStyle:{normal:{color:"#A9A9A9"}},data:signals[i].cLogData}); //对chart0使用了sampling:"average"进行降采样，优化性能
 		chart0Options.series.push({name:"ssignal"+i.toString(), type:"scatter", symbolSize:3, z:100, data:signals[i].cLogData});
 	}
 	chart0.setOption(chart0Options, true);
@@ -259,9 +259,11 @@ function preProcess() {
 }
 
 function getFeaturePoints() {
+	var preArea = document.getElementById("preArea");
+	preArea.hidden = true;  //获得特殊点范围后，隐藏chart0
 	var range = splitIndex();
 	findMaxPoint(range); //寻找极大值点
-	initialDraw(); //画第一副图
+	initialDraw(); //画初始图
 }
 
 function splitIndex() {
@@ -369,10 +371,10 @@ function changeData(chart, chartNum) {
 
 function initialDraw() {
     resultArea.hidden = false;
-	chart1 = echarts.init(document.getElementById('chart1'));
-    chart2 = echarts.init(document.getElementById('chart2'));
-    chart3 = echarts.init(document.getElementById('chart3'));
-    chart4 = echarts.init(document.getElementById('chart4'));
+	chart1 = echarts.init(document.getElementById('chart1'),"dark");
+    chart2 = echarts.init(document.getElementById('chart2'),"dark");
+    chart3 = echarts.init(document.getElementById('chart3'),"dark");
+    chart4 = echarts.init(document.getElementById('chart4'),"dark");
     chartAry = [chart1, chart2, chart3, chart4];
 	chart1.setOption(initOption, true);
 	chart1.setOption(

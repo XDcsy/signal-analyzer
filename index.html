@@ -5,6 +5,7 @@
     <!-- 引入 ECharts 文件 -->
     <script src="xlsx.full.min.js"></script>
 	<script src="echarts.js"></script>
+	<script src="dark.js"></script>
 	<script src="ecStat.js"></script>
 </head>
 <body>
@@ -26,8 +27,7 @@
 	<button id="pre">Previous chart</button>
 	<button id="next">Next chart</button>
 	<p id="pointNum">You can click on a feature point to move it.</p>
-	<button id="left">Move left</button>
-	<button id="right">Move right</button>
+
 	<br>
 	
 
@@ -42,6 +42,11 @@
 	<label for="notlog2"><input type="radio" id="notlog2" name="c2"/>time</label>
 	<label for="log2"><input type="radio" id="log2" checked=true name="c2"/>log(time)</label> 
     <div id="chart2" style="width: 600px;height:400px;"></div>
+	</div>
+	
+	<div>
+	<button id="left">Move left</button>
+	<button id="right">Move right</button>
 	</div>
 	
 	<div style="float:left;">

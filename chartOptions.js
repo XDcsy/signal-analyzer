@@ -1,7 +1,7 @@
 //用于初始化的通用option
 var initOption = {
     title : { // 图表标题，可以通过show:true/false控制显示与否，还有subtext:'二级标题',link:'http://www.baidu.com'等
-        text : 'Signal'
+        text : 'Chart'
     },
     tooltip : { // 这个是鼠标浮动时的工具条，显示鼠标所在区域的数据，trigger这个地方每种图有不同的设置，见官网吧，一两句说不清楚
         trigger : 'axis'
@@ -99,7 +99,7 @@ var initOption = {
 						position: 'left',
 						textStyle: {
 							color: '#333',
-							fontSize:14
+							fontSize:17
 						},
 						formatter:function(params){
 							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
@@ -125,7 +125,7 @@ var initOption = {
 						position: 'left',
 						textStyle: {
 							color: '#333',
-							fontSize:14
+							fontSize:17
 						},
 						formatter:function(params){
 							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
@@ -151,7 +151,7 @@ var initOption = {
 						position: 'left',
 						textStyle: {
 							color: '#333',
-							fontSize:14
+							fontSize:17
 						},
 						formatter:function(params){
 							return([params.data.coord[0].toPrecision(5), params.data.coord[1].toPrecision(5)]); 
